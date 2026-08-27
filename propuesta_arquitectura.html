@@ -1,0 +1,466 @@
+<title>Propuesta de Arquitectura de Datos · Maxikash</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #F3F6FC;
+    --surface: #FFFFFF;
+    --surface-alt: #EAF0FB;
+    --border: #D7E1F2;
+    --text: #0B1F3A;
+    --text-muted: #57647D;
+    --brand: #0147BA;
+    --brand-strong: #013583;
+    --brand-soft: #E7EEFC;
+    --lime: #A8B02E;
+    --lime-bg: #F4F6DE;
+    --lime-text: #5C6317;
+    --code-bg: #0B1F3A;
+    --code-text: #E3EAF7;
+    --code-accent: #8FB4F5;
+    --code-comment: #7C8CA8;
+    --code-string: #C9D97A;
+    --warn: #9A6400;
+    --warn-soft: #FCF1DA;
+    --good: #1F7A4D;
+    --good-soft: #E4F5EC;
+    --shadow: 0 1px 2px rgba(11,31,58,0.06), 0 10px 28px rgba(11,31,58,0.08);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, .mono { font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace; }
+  h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 600; }
+  p { margin: 0 0 1em; max-width: 68ch; }
+
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 clamp(18px, 4vw, 48px) 100px; }
+
+  header.hero {
+    background: linear-gradient(180deg, var(--brand-soft) 0%, var(--bg) 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 0 44px;
+  }
+  .hero-inner { max-width: 1040px; margin: 0 auto; padding: 0 clamp(18px, 4vw, 48px); }
+  .logo-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 30px; flex-wrap: wrap; }
+  .logo-row img { height: 34px; width: auto; display: block; }
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: "IBM Plex Mono"; font-size: 12px; font-weight: 600; letter-spacing: 0.03em;
+    background: var(--warn-soft); color: var(--warn); border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
+    padding: 7px 14px; border-radius: 999px;
+  }
+  .status-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warn); }
+
+  h1.title { font-size: clamp(28px, 4.2vw, 40px); color: var(--brand-strong); line-height: 1.12; max-width: 24ch; margin-bottom: 12px; }
+  p.lede { font-size: 17px; color: var(--text-muted); max-width: 64ch; }
+
+  .meta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .chip {
+    font-family: "IBM Plex Mono"; font-size: 11.5px; padding: 6px 11px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--border); color: var(--text-muted);
+  }
+  .chip b { color: var(--text); font-weight: 500; }
+
+  nav.pillnav {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-top: 30px;
+    padding: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+  nav.pillnav a {
+    font-size: 13px; font-weight: 500; color: var(--text-muted); text-decoration: none;
+    padding: 8px 13px; border-radius: 8px; white-space: nowrap;
+  }
+  nav.pillnav a:hover { background: var(--surface-alt); color: var(--text); }
+
+  section.block { margin-top: 64px; scroll-margin-top: 20px; }
+  .eyebrow { font-family: "IBM Plex Mono"; font-size: 12px; color: var(--brand); letter-spacing: 0.05em; margin-bottom: 8px; text-transform: uppercase; }
+  h2.h { font-size: 23px; color: var(--text); margin-bottom: 14px; padding-bottom: 14px; border-bottom: 2px solid var(--border); position: relative; }
+  h2.h::after { content: ""; position: absolute; left: 0; bottom: -2px; width: 46px; height: 2px; background: var(--lime); }
+  h3.h3 { font-size: 16.5px; margin: 26px 0 10px; color: var(--brand-strong); }
+
+  ul.list { list-style: none; margin: 0 0 1em; padding: 0; max-width: 68ch; }
+  ul.list li { position: relative; padding-left: 20px; margin-bottom: 8px; }
+  ul.list li::before { content: "›"; position: absolute; left: 2px; color: var(--brand); font-weight: 600; }
+
+  .table-wrap { overflow-x: auto; margin: 16px 0 24px; border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); }
+  table { border-collapse: collapse; width: 100%; min-width: 460px; background: var(--surface); }
+  thead th { 
+    text-align: left; 
+    font-size: 11.5px; 
+    letter-spacing: 0.03em; 
+    text-transform: uppercase; 
+    color: #FFFFFF; 
+    background: var(--brand-strong);
+    padding: 10px 14px; 
+    white-space: nowrap; 
+  }
+  tbody td { padding: 9px 14px; border-top: 1px solid var(--border); font-size: 14px; vertical-align: top; }
+  tbody code { font-size: 12.5px; background: var(--surface-alt); padding: 1px 5px; border-radius: 4px; color: var(--brand-strong); }
+  tbody tr:hover { background: var(--surface-alt); }
+
+  .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 16px 0 24px; }
+  .ncard { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 15px; }
+  .ncard .label { font-family: "IBM Plex Mono"; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 7px; }
+  .ncard .pattern { font-family: "IBM Plex Mono"; font-size: 14px; color: var(--brand-strong); font-weight: 600; margin-bottom: 5px; word-break: break-word; }
+  .ncard .example { font-family: "IBM Plex Mono"; font-size: 12px; color: var(--text-muted); }
+
+  .code-wrap { position: relative; margin: 14px 0 24px; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  .code-label { font-family: "IBM Plex Mono"; font-size: 11px; color: var(--code-comment); background: var(--code-bg); padding: 8px 15px 0; letter-spacing: 0.03em; }
+  pre.code { margin: 0; padding: 8px 16px 16px; overflow-x: auto; background: var(--code-bg); color: var(--code-text); font-family: "IBM Plex Mono"; font-size: 12.5px; line-height: 1.6; }
+  pre.code .kw { color: var(--code-accent); }
+  pre.code .cm { color: var(--code-comment); font-style: italic; }
+  pre.code .st { color: var(--code-string); }
+
+  .callout { display: flex; gap: 12px; padding: 15px 17px; border-radius: 10px; margin: 18px 0 24px; max-width: 70ch; border: 1px solid transparent; }
+  .callout .ic { font-family: "IBM Plex Mono"; font-weight: 600; flex-shrink: 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+  .callout p { margin: 0; font-size: 14px; }
+  .callout.warn { background: var(--warn-soft); border-color: color-mix(in srgb, var(--warn) 30%, transparent); }
+  .callout.warn .ic { color: var(--warn); }
+  .callout.brand { background: var(--brand-soft); border-color: color-mix(in srgb, var(--brand) 30%, transparent); }
+  .callout.brand .ic { color: var(--brand-strong); }
+  .callout.lime { background: var(--lime-bg); border-color: color-mix(in srgb, var(--lime) 30%, transparent); }
+  .callout.lime .ic { color: var(--lime-text); }
+
+  figure.diagram { margin: 18px 0 26px; padding: 20px 18px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); }
+  figure.diagram img { width: 100%; height: auto; display: block; border-radius: 6px; }
+  figure.diagram figcaption { margin-top: 12px; font-size: 12.5px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 10px; }
+
+  .resp-table { width: 100%; }
+
+  footer.doc-footer { margin-top: 80px; padding-top: 22px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--text-muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+
+  @media (max-width: 640px) {
+    nav.pillnav { display: none; }
+  }
+
+</style>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="logo-row">
+      <img src="maxikash_logo_transparent.png" alt="Maxikash" />
+      <span class="status-badge"><span class="dot"></span>PROPUESTA · PENDIENTE DE APROBACIÓN</span>
+    </div>
+    <h1 class="title">Propuesta de Arquitectura de Datos</h1>
+    <p class="lede">Estándar de nombrado, modelo de datos, control de cambios, reversa, auditoría y gobernanza para las bases de datos MySQL de Maxikash</p>
+    <div class="meta-row">
+      <span class="chip">Motor <b>MySQL 8.x local</b></span>
+      <span class="chip">Idioma <b>Español</b></span>
+      <span class="chip">Base piloto <b>maxikash_nucleo_pruebas</b></span>
+      <span class="chip">Versión <b>Propuesta v3 · 26 ago 2026</b></span>
+    </div>
+    <nav class="pillnav">
+      <a href="#responsabilidades">01. Responsabilidades</a>
+      <a href="#diagrama">02. Diagrama ER</a>
+      <a href="#identificador-auditoria">03. Llave pública y Auditoría</a>
+      <a href="#estandar-nombrado">04. Convenciones de nombrado</a>
+      <a href="#arquetipos-sp">05. Arquetipos de SP</a>
+      <a href="#estructura-repo">06. Estructura de código</a>
+      <a href="#control-cambios">07. Control de cambios</a>
+      <a href="#plan-reversa">08. Plan de reversa</a>
+      <a href="#gobernanza">09. Gobernanza y Diccionario</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ BLOQUE 1: VISION GENERAL Y ALINEACION ============ -->
+
+  <!-- 01 · SEPARACION DE RESPONSABILIDADES -->
+  <section class="block" id="responsabilidades">
+    <div class="eyebrow">01 · Alineación de Capas</div>
+    <h2 class="h">Separación de responsabilidades</h2>
+    <p>Para garantizar que cada equipo mantenga autonomía en su tecnología sin romper el contrato de datos, se establece la frontera formal entre la base de datos y la capa de aplicación:</p>
+    
+    <div class="table-wrap"><table class="resp-table">
+      <thead><tr><th>Capa</th><th>Responsable</th><th>Convención / Alcance</th></tr></thead>
+      <tbody>
+        <tr><td>Modelo físico (BD, tablas, columnas, SPs)</td><td>Data Engineering</td><td><code>snake_case</code>, español técnico. Acceso solo vía SPs o vistas.</td></tr>
+        <tr><td>Acceso a datos / ORM / DTOs</td><td>Back-End</td><td>Libre elección (camelCase / DTOs). Mapea UUIDs y firma de SPs.</td></tr>
+        <tr><td>Contratos de API (JSON)</td><td>Back-End</td><td>Expone exclusivamente <code>uuid_externo</code> — nunca IDs numéricos.</td></tr>
+        <tr><td>Consumo de la API</td><td>Front-End / Móvil</td><td>Sin interacción directa con la base de datos. Consumo REST/gRPC.</td></tr>
+      </tbody>
+    </table></div>
+
+    <p>El identificador <code>uuid_externo</code> actúa como el desacoplamiento clave: la base maneja autoincrementables eficientes internamente, mientras Back-End expone identificadores seguros y universales en sus APIs.</p>
+  </section>
+
+  <!-- 02 · DIAGRAMA ER -->
+  <section class="block" id="diagrama">
+    <div class="eyebrow">02 · Estado real del piloto</div>
+    <h2 class="h">Diagrama Entidad-Relación</h2>
+    <p>Modelo físico de la base de pruebas <code>maxikash_nucleo_pruebas</code>, incluyendo el identificador público y las columnas de auditoría base.</p>
+
+    <figure class="diagram">
+      <!-- AQUÍ AGREGAS TU IMAGEN -->
+      <img src="Maxikash_ERD_v1.drawio.png" alt="Diagrama ER Maxikash v5" class="diagram-img" />
+
+      <figcaption>Fuente: 01_pilot_schema_naming.sql (v5) · Notación Crow's Foot · PK/FK completas, incluyendo uuid_externo y columnas de auditoría.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ BLOQUE 2: ESTANDARES DE DISEÑO FISICO ============ -->
+
+  <!-- 03 · IDENTIFICADOR PUBLICO Y AUDITORIA -->
+  <section class="block" id="identificador-auditoria">
+    <div class="eyebrow">03 · Estructura Base de Tabla</div>
+    <h2 class="h">Identificador público y auditoría</h2>
+    <p>Cada tabla de negocio tiene dos llaves con propósitos distintos: <code>id_&lt;entidad&gt;</code> es la llave interna, autoincremental, de uso exclusivo de la base de datos — nunca se expone fuera de ella. <code>uuid_externo</code> es el identificador público: lo genera la propia base al insertar (no la aplicación) y es el único que Back-End/Front-End deben consumir.</p>
+    <p>Adicionalmente, toda tabla de negocio incluye trazabilidad obligatoria de creación y modificación (<code>creado_por</code> / <code>actualizado_por</code>).</p>
+    
+    <div class="code-wrap">
+      <div class="code-label">fragmento real — tablas/01_pilot_schema_naming.sql</div>
+      <pre class="code"><span class="kw">CREATE TABLE</span> usuarios (
+    id_usuario          BIGINT UNSIGNED <span class="kw">NOT NULL</span> AUTO_INCREMENT,        <span class="cm">-- interna, nunca se expone</span>
+    uuid_externo        CHAR(36)     <span class="kw">NOT NULL</span> <span class="kw">DEFAULT</span> (UUID()),          <span class="cm">-- publica, la genera la base</span>
+    <span class="cm">...</span>
+    creado_por          VARCHAR(80)  <span class="kw">NULL</span>,   <span class="cm">-- usuario/servicio ejecutor</span>
+    actualizado_por     VARCHAR(80)  <span class="kw">NULL</span>,   <span class="cm">-- usuario/servicio del ultimo cambio</span>
+    fecha_creacion      DATETIME     <span class="kw">NOT NULL</span> <span class="kw">DEFAULT</span> CURRENT_TIMESTAMP,
+    fecha_actualizacion DATETIME     <span class="kw">NOT NULL</span> <span class="kw">DEFAULT</span> CURRENT_TIMESTAMP <span class="kw">ON UPDATE</span> CURRENT_TIMESTAMP,
+    <span class="kw">CONSTRAINT</span> uq_usuarios_uuid_externo <span class="kw">UNIQUE</span> (uuid_externo)
+);</pre>
+    </div>
+    
+    <div class="callout lime">
+      <span class="ic">Ya aplicado</span>
+      <p>Las 6 tablas de negocio del piloto (<code>usuarios</code>, <code>monederos</code>, <code>transacciones</code>, <code>creditos</code>, <code>pagos_credito</code>, <code>metodos_pago_usuario</code>) ya tienen esta estructura corriendo en el ambiente de pruebas.</p>
+    </div>
+  </section>
+
+  <!-- 04 · CONVENCIONES DE NOMBRADO -->
+  <section class="block" id="estandar-nombrado">
+    <div class="eyebrow">04 · Estandarización Físicas</div>
+    <h2 class="h">Convenciones de nombrado</h2>
+    <p>Toda entidad y objeto dentro de MySQL debe responder a reglas estrictas de lenguaje, prefijos y relaciones:</p>
+    
+    <ul class="list">
+      <li><b>Idioma y formato:</b> Español técnico en <code>snake_case</code>, minúsculas, sin acentos ni carácteres especiales (ñ).</li>
+      <li><b>Sustantivos:</b> En plural para tablas de negocio (<code>usuarios</code>, <code>monederos</code>).</li>
+      <li><b>Motor:</b> <code>ENGINE=InnoDB</code> siempre (soporta transacciones y FKs).</li>
+    </ul>
+
+    <h3 class="h3">Prefijos de tablas</h3>
+    <div class="grid-cards">
+      <div class="ncard"><div class="label">Tabla de negocio</div><div class="pattern">tbl_&lt;entidad&gt;</div><div class="example">tbl_usuarios, tbl_monederos</div></div>
+      <div class="ncard"><div class="label">Catálogo / lookup</div><div class="pattern">tbl_cat_&lt;entidad&gt;</div><div class="example">tbl_cat_estatus</div></div>
+      <div class="ncard"><div class="label">Tabla temporal</div><div class="pattern">tmp_&lt;detalle&gt;</div><div class="example">tmp_calculo_intereses</div></div>
+      <div class="ncard"><div class="label">Staging / ETL</div><div class="pattern">tbl_stg_&lt;detalle&gt;</div><div class="example">tbl_stg_carga_diaria</div></div>
+    </div>
+
+    <h3 class="h3">Nombres de campos y Llaves Foráneas</h3>
+    <p>La PK de <code>usuarios</code> se llama <code>id_usuario</code>. Cualquier tabla que la referencie usa <b>exactamente ese mismo nombre</b> para su columna FK. Así se identifica la relación al instante:</p>
+
+    <div class="code-wrap">
+      <div class="code-label">ejemplo de relación FK</div>
+      <pre class="code"><span class="kw">CREATE TABLE</span> monederos (
+    id_monedero  BIGINT UNSIGNED <span class="kw">NOT NULL</span> AUTO_INCREMENT,
+    id_usuario   BIGINT UNSIGNED <span class="kw">NOT NULL</span>,  <span class="cm">-- FK con el mismo nombre exacto de la PK de usuarios</span>
+    <span class="cm">...</span>
+    <span class="kw">CONSTRAINT</span> fk_monederos_usuarios <span class="kw">FOREIGN KEY</span> (id_usuario)
+        <span class="kw">REFERENCES</span> usuarios (id_usuario)
+);</pre>
+    </div>
+
+    <h3 class="h3">Matriz completa de objetos</h3>
+    <div class="table-wrap"><table class="resp-table">
+      <thead><tr><th>Objeto</th><th>Prefijo / Patrón</th><th>Ejemplo</th></tr></thead>
+      <tbody>
+        <tr><td>Tabla de negocio</td><td><code>tbl_</code></td><td><code>tbl_monederos</code></td></tr>
+        <tr><td>Tabla de catálogo</td><td><code>tbl_cat_</code> (o <code>cat_</code>)</td><td><code>cat_estatus</code></td></tr>
+        <tr><td>Vista</td><td><code>vw_</code></td><td><code>vw_saldos_monederos</code></td></tr>
+        <tr><td>Procedimiento almacenado</td><td><code>sp_</code></td><td><code>sp_nucleo_ins_usuario</code></td></tr>
+        <tr><td>Trigger</td><td><code>trg_</code></td><td><code>trg_monederos_after_update_audit</code></td></tr>
+        <tr><td>Función</td><td><code>fn_</code></td><td><code>fn_creditos_calcular_mensualidad</code></td></tr>
+        <tr><td>Llave foránea</td><td><code>fk_&lt;tabla&gt;_&lt;tabla_ref&gt;</code></td><td><code>fk_monederos_usuarios</code></td></tr>
+        <tr><td>Índice único</td><td><code>uq_&lt;tabla&gt;_&lt;columna&gt;</code></td><td><code>uq_usuarios_correo</code></td></tr>
+        <tr><td>Índice normal</td><td><code>idx_&lt;tabla&gt;_&lt;cols&gt;</code></td><td><code>idx_transacciones_id_monedero_fecha</code></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- 05 · ARQUETIPOS DE SP -->
+  <section class="block" id="arquetipos-sp">
+    <div class="eyebrow">05 · Interfaz de Programación</div>
+    <h2 class="h">Arquetipos de procedimientos almacenados</h2>
+    <p>Toda la lógica de escritura y procesos complejos pasa por <code>Stored Procedures</code> estandarizados bajo 5 plantillas principales:</p>
+    
+    <div class="grid-cards">
+      <div class="ncard"><div class="label">Escritura · alta</div><div class="pattern">sp_<wbr>nucleo_<wbr>ins_<wbr>usuario</div><div class="example">inserta y valida antes de escribir</div></div>
+      <div class="ncard"><div class="label">Escritura · actualización</div><div class="pattern">sp_<wbr>monedero_<wbr>upd_<wbr>estatus</div><div class="example">modifica un registro existente</div></div>
+      <div class="ncard"><div class="label">Consulta</div><div class="pattern">sp_<wbr>nucleo_<wbr>sel_<wbr>usuario_<wbr>by_<wbr>correo</div><div class="example">solo lectura, optimizada</div></div>
+      <div class="ncard"><div class="label">Proceso de negocio</div><div class="pattern">sp_<wbr>monedero_<wbr>proc_<wbr>aplicar_<wbr>deposito</div><div class="example">transaccionalidad multi-tabla</div></div>
+      <div class="ncard"><div class="label">ETL / Lotes</div><div class="pattern">sp_<wbr>etl_<wbr>load_<wbr>transacciones</div><div class="example">cargas masivas en segundo plano</div></div>
+    </div>
+
+    <p>Los SPs de escritura responden con una firma unificada de 4 parámetros <code>OUT</code> para que Back-End interprete los resultados de manera transparente:</p>
+    
+    <div class="code-wrap">
+      <div class="code-label">firma real — procedimientos_almacenados/04_sp_archetypes.sql</div>
+      <pre class="code"><span class="kw">CREATE PROCEDURE</span> sp_monedero_upd_estatus (
+    <span class="kw">IN</span>  p_id_monedero      BIGINT UNSIGNED,
+    <span class="kw">IN</span>  p_codigo_estatus   VARCHAR(30),
+    <span class="kw">IN</span>  p_usuario_ejecutor VARCHAR(80),   <span class="cm">-- audita quién solicita la acción</span>
+    <span class="kw">OUT</span> p_exito            TINYINT(1),    <span class="cm">-- 1 = Exitoso, 0 = Error</span>
+    <span class="kw">OUT</span> p_codigo_salida    VARCHAR(30),   <span class="cm">-- ej: MONEDERO_NO_EXISTE</span>
+    <span class="kw">OUT</span> p_mensaje          VARCHAR(150),
+    <span class="kw">OUT</span> p_uuid_publico     VARCHAR(36)
+)</pre>
+    </div>
+  </section>
+
+  <!-- ============ BLOQUE 3: OPERACION, CONTROL DE CAMBIOS Y REVERSA ============ -->
+
+  <!-- 06 · ESTRUCTURA DEL REPOSITORIO DBMAXI -->
+  <section class="block" id="estructura-repo">
+    <div class="eyebrow">06 · Organización del Código Fuente</div>
+    <h2 class="h">Estructura de carpetas (DBMAXI/)</h2>
+    <p>Cada tipo de objeto de base de datos tiene su propia carpeta dentro del repositorio. Esto separa responsabilidades y permite que cualquier integrante del equipo sepa exactamente dónde ubicar o crear un objeto.</p>
+
+    <div class="code-wrap">
+      <div class="code-label">jerarquía de directorio — repositorio git / DBMAXI</div>
+      <pre class="code">DBMAXI/
+├── tablas/                     <span class="cm">-- Esquema piloto completo (tablas de negocio)</span>
+├── catalogos/                  <span class="cm">-- Catálogos de dominio y tablas de gobernanza</span>
+├── vistas/                     <span class="cm">-- Vistas creadas de aquí en adelante</span>
+├── procedimientos_almacenados/ <span class="cm">-- Arquetipos y Stored Procedures</span>
+├── funciones/                  <span class="cm">-- Funciones de utilería (reservada)</span>
+├── triggers/                   <span class="cm">-- Disparadores de auditoría y negocio (reservada)</span>
+├── eventos/                    <span class="cm">-- Eventos programados de MySQL (reservada)</span>
+├── reversos/                   <span class="cm">-- Scripts de rollback por cada folio</span>
+├── datos/
+│   ├── cargas_iniciales/       <span class="cm">-- Inserts de datos semilla y catálogos</span>
+│   └── exportaciones/          <span class="cm">-- Queries de consulta para el diccionario</span>
+├── documentacion/
+│   ├── diseno/                 <span class="cm">-- Word formal, mockup HTML, diagrama ER</span>
+│   └── ejecucion/              <span class="cm">-- Manuales de despliegue y operación</span>
+└── marca/                      <span class="cm">-- Identidad gráfica y logotipos</span></pre>
+    </div>
+
+    <div class="table-wrap"><table class="resp-table">
+      <thead><tr><th>Carpeta</th><th>Contenido</th><th>Tipo de objeto SQL</th></tr></thead>
+      <tbody>
+        <tr><td><code>tablas/</code></td><td>Esquema piloto completo (tablas de negocio)</td><td><code>CREATE TABLE</code> (+ 1 <code>CREATE VIEW</code> embebida)</td></tr>
+        <tr><td><code>catalogos/</code></td><td>Catálogos de dominio y tablas de gobernanza</td><td><code>CREATE TABLE</code> (+ SP/EVENT embebidos)</td></tr>
+        <tr><td><code>vistas/</code></td><td>Vistas nuevas independientes</td><td><code>CREATE VIEW</code></td></tr>
+        <tr><td><code>procedimientos_almacenados/</code></td><td>Arquetipos y Stored Procedures</td><td><code>CREATE PROCEDURE</code></td></tr>
+        <tr><td><code>funciones/</code></td><td>Funciones (reservada)</td><td><code>CREATE FUNCTION</code></td></tr>
+        <tr><td><code>triggers/</code></td><td>Triggers (reservada)</td><td><code>CREATE TRIGGER</code></td></tr>
+        <tr><td><code>eventos/</code></td><td>Eventos programados nuevos</td><td><code>CREATE EVENT</code></td></tr>
+        <tr><td><code>reversos/</code></td><td>Script de reverso por cada folio aplicado</td><td><code>DROP</code> / Reverso DDL</td></tr>
+        <tr><td><code>datos/cargas_iniciales/</code></td><td>Datos semilla y catálogos poblados</td><td><code>INSERT</code> (DML)</td></tr>
+        <tr><td><code>datos/exportaciones/</code></td><td>Queries para generación de diccionario</td><td><code>SELECT</code> (DQL)</td></tr>
+        <tr><td><code>documentacion/diseno/</code></td><td>Documentos formales, mockups, ER</td><td>—</td></tr>
+        <tr><td><code>documentacion/ejecucion/</code></td><td>Guías de ejecución en producción</td><td>—</td></tr>
+        <tr><td><code>marca/</code></td><td>Recursos de marca Maxikash</td><td>—</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="callout brand">
+      <span class="ic">Nota sobre carpetas reservadas</span>
+      <p>Las carpetas <code>vistas/</code>, <code>funciones/</code>, <code>triggers/</code> y <code>eventos/</code> existen desde ya para que todo objeto <b>nuevo</b> nazca ahí. Los objetos embebidos en el piloto original (como <code>vw_saldos_monederos</code> o el EVENT de drift) se mantienen en sus scripts históricos. Cada carpeta incluye un <code>LEEME.md</code> explicativo.</p>
+    </div>
+  </section>
+
+  <!-- 07 · CONTROL DE CAMBIOS POR FOLIO -->
+  <section class="block" id="control-cambios">
+    <div class="eyebrow">07 · Trazabilidad de Despliegues</div>
+    <h2 class="h">Control de cambios por folio</h2>
+    <p>Ningún cambio al esquema se ejecuta en producción o pruebas sin registrar antes un folio formal. Se rastrea la fecha, responsable, script aplicado y su reverso obligatorio.</p>
+    
+    <div class="grid-cards">
+      <div class="ncard"><div class="label">Formato de folio</div><div class="pattern">MXK-&lt;ENV&gt;-&lt;YYYYMMDD&gt;-&lt;SEQ3&gt;</div><div class="example">MXK-DEV-20260826-003</div></div>
+    </div>
+
+    <div class="table-wrap"><table class="resp-table">
+      <thead><tr><th>Folio</th><th>Tipo</th><th>Qué cambia</th></tr></thead>
+      <tbody>
+        <tr><td><code>MXK-DEV-20260824-001</code></td><td>DDL</td><td>Esquema piloto original — 8 tablas + vista</td></tr>
+        <tr><td><code>MXK-DEV-20260826-001</code></td><td>DDL</td><td>Identificador público + columnas de auditoría</td></tr>
+        <tr><td><code>MXK-DEV-20260826-002</code></td><td>Trigger</td><td>11 disparadores que alimentan la auditoría</td></tr>
+        <tr><td><code>MXK-DEV-20260826-003</code></td><td>SP</td><td>Arquetipos v3 — reciben quién ejecuta el cambio</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- 08 · PLAN DE REVERSA -->
+  <section class="block" id="plan-reversa">
+    <div class="eyebrow">08 · Despliegue Seguro</div>
+    <h2 class="h">Plan de reversa (Rollback)</h2>
+    <p>Todo script DDL/DML que aplica un cambio tiene, como requisito de aprobación, un script espejo en la carpeta <code>reversos/</code> que revierte exactamente sus efectos sin dejar residuos.</p>
+
+    <div class="table-wrap"><table class="resp-table">
+      <thead><tr><th>Cambio (forward)</th><th>Script de reverso (reversos/)</th></tr></thead>
+      <tbody>
+        <tr><td><code>tablas/01_pilot_schema_naming.sql</code></td><td><code>reversos/rb_20260826_001_uuid_auditoria.sql</code></td></tr>
+        <tr><td><code>triggers/08_audit_triggers.sql</code></td><td><code>reversos/rb_20260826_002_audit_triggers.sql</code></td></tr>
+        <tr><td><code>procedimientos_almacenados/04_sp_archetypes.sql</code></td><td><code>reversos/rb_20260826_003_sp_v3.sql</code></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- ============ BLOQUE 4: GOBERNANZA Y MANTENIMIENTO ============ -->
+
+  <!-- 09 · DICCIONARIO Y GOBERNANZA -->
+  <section class="block" id="gobernanza">
+    <div class="eyebrow">09 · Calidad Viva</div>
+    <h2 class="h">Diccionario de datos y gobernanza</h2>
+    <p>La documentación del modelo no es un archivo estático en Excel; se genera directamente desde la base de datos mediante metadatos vivos en <code>information_schema</code>.</p>
+
+    <div class="grid-cards">
+      <div class="ncard"><div class="label">Diccionario dinámico</div><div class="pattern">datos/exportaciones/</div><div class="example">Consultas DQL que leen comentarios de tablas y columnas</div></div>
+      <div class="ncard"><div class="label">Registro maestro</div><div class="pattern">catalogos/</div><div class="example">Tabla <code>table_registry</code>: dominio, dueño y nivel PII/PCI</div></div>
+      <div class="ncard"><div class="label">Detección de drift</div><div class="pattern">catalogos/</div><div class="example">Evento MySQL que alerta si nacen tablas fuera de proceso</div></div>
+    </div>
+  </section>
+
+
+
+  <!-- 10 · VENTAJAS Y RETOS -->
+  <section class="block" id="matriz-valor">
+    <div class="eyebrow">10 · Evaluación de Impacto</div>
+    <h2 class="h">Ventajas y retos de la propuesta</h2>
+    <p>Para la toma de decisiones con Dirección de TI y Liderazgo de Desarrollo, se presenta el balance transparente entre el valor técnico aportado y la curva de adaptación operativa requerida:</p>
+
+    <div class="table-wrap"><table class="resp-table">
+      <thead><tr><th>Ventajas (Beneficio de Negocio y Técnico)</th><th>Retos y Mitigación</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>Desacoplamiento Total:</b> El uso de <code>uuid_externo</code> permite refactorizar la base interna o cambiar de motor sin romper las APIs de Back-End.</td>
+          <td><b>Curva de Aprendizaje:</b> El equipo debe acostumbrarse a no usar <code>DELETE</code> físico y pasar las modificaciones por SPs.<br><i>Mitigación: Arquetipos estándar listos para reutilizar.</i></td>
+        </tr>
+        <tr>
+          <td><b>Seguridad y Cumplimiento:</b> Manejo explícito de datos sensibles (PII/PCI) y auditoría nativa sobre quién creó/modificó cada dato.</td>
+          <td><b>Rigor en Despliegues:</b> Requiere redactar y validar el script de reverso (rollback) por cada folio liberado.<br><i>Mitigación: Plantillas estructuradas en la carpeta <code>reversos/</code>.</i></td>
+        </tr>
+        <tr>
+          <td><b>Precisión Financiera:</b> El uso obligatorio de <code>DECIMAL(19,4)</code> elimina descuadres o desbordamientos por redondeo de flotantes en saldos y pagos.</td>
+          <td><b>Mayor número de objetos:</b> Gestión de triggers, eventos y SPs adicionales.<br><i>Mitigación: Organización en repositorio estructurado en <code>DBMAXI/</code>.</i></td>
+        </tr>
+        <tr>
+          <td><b>Cero Despliegues Fallidos:</b> El protocolo de Smoke Testing y la idempotencia garantizan estabilidad en los entornos de Pruebas y Producción.</td>
+          <td><b>Gobernanza activa:</b> Necesidad de monitoreo constante contra tablas huérfanas.<br><i>Mitigación: Detección automatizada vía Eventos MySQL y scripts DQL.</i></td>
+        </tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <footer class="doc-footer">
+    <span>Maxikash · Data Engineering — Propuesta de Arquitectura de Datos</span>
+    <span>Preparado para revisión con Dirección de TI y liderazgo de desarrollo</span>
+  </footer>
+</div>
