@@ -249,7 +249,7 @@
     <div class="table-wrap"><table class="resp-table">
       <thead><tr><th>Capa</th><th>Responsable</th><th>Convención / Alcance</th></tr></thead>
       <tbody>
-        <tr><td>Modelo físico (BD, tablas, columnas, SPs)</td><td>Data Engineering</td><td><code>snake_case</code>, español técnico. Acceso solo vía SPs o vistas.</td></tr>
+        <tr><td>Modelo físico (BD, tablas, columnas, SPs)</td><td>Arquitecto de Datos / DBA</td><td><code>snake_case</code>, español técnico. Acceso solo vía SPs o vistas.</td></tr>
         <tr><td>Acceso a datos / ORM / DTOs</td><td>Back-End</td><td>Libre elección (camelCase / DTOs). Mapea UUIDs y firma de SPs.</td></tr>
         <tr><td>Contratos de API (JSON)</td><td>Back-End</td><td>Expone exclusivamente <code>uuid_externo</code> — nunca IDs numéricos.</td></tr>
         <tr><td>Consumo de la API</td><td>Front-End / Móvil</td><td>Sin interacción directa con la base de datos. Consumo REST/gRPC.</td></tr>
@@ -568,13 +568,10 @@
       <div class="ncard"><div class="label">Detección de drift</div><div class="pattern">catalogos/</div><div class="example">Evento MySQL que alerta si nacen tablas fuera de proceso</div></div>
     </div>
 
-    <h3 class="h3">Ejemplo de salida</h3>
-    <p>Así se vería el diccionario generado para una tabla — el equipo puede pegar aquí una captura real una vez corrido el export.</p>
-
     <figure class="diagram">
       <img src="diccionario_datos.png" class="diagram-img" alt="Ejemplo de diccionario de datos generado"> 
       <!--<div class="placeholder-box">[ Espacio reservado — pega aquí una captura de ejemplo del diccionario generado ]</div>-->
-      <figcaption>Ejemplo ilustrativo de la salida del diccionario de datos (pendiente de captura real).</figcaption>
+      <figcaption></figcaption>
     </figure>
   </section>
 
